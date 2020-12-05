@@ -10,6 +10,11 @@ This folder demostrate the steps of homework of best practice of git, Python and
 
 
 
+
+**Trick**
+
+
+
 ## Python
 
 
