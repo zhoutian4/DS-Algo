@@ -14,18 +14,56 @@
 #     print_hi('PyCharm')
 #
 # # See PyCharm help at https://www.jetbrains.com/help/pycharm/
-
-
-
-import finnhub
+# import finnhub
 
 # Setup client
-finnhub_client = finnhub.Client(api_key="sandbox_bv838gn48v6vtpa0emu0")
 
-# Stock candles
-res = finnhub_client.stock_candles('AAPL', 'D', 1590988249, 1591852249)
-print(res)
+# finnhub_client = finnhub.Client(api_key="sandbox_bv838gn48v6vtpa0emu0")
 
-#Convert to Pandas Dataframe
+import requests
+
+import requests
 import pandas as pd
-print(pd.DataFrame(res))
+import pyodbc
+
+# setup api_key
+# api_key = "bv838gn48v6vtpa0emtg"
+api_key = "sandbox_bv838gn48v6vtpa0emu0"
+
+# setup SQL server
+server = 'George-PC'
+database = 'Algo_Trade'
+username = 'algorw'
+password = 'Toronto2020'
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server}; SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
+cursor = cnxn.cursor()
+try:
+    r = requests.get('https://finnhub.io/api/v1/stock/symbol?exchange=US&token=' + str(api_key))
+    # print(r)
+    # print(r.json())
+    # print(type(r.json()))
+    # print(r.json()[9464:9469])
+    df = pd.DataFrame(r.json())
+    print(df)
+    # print(df.shape())
+    for index, row in df.iterrows():
+
+        cursor.execute("INSERT INTO Stock_Symbol (Currency, Description, Display_Symbol, Symbol, Type) values (?,?,?,?,?)",
+                       str(row.currency).replace("'", "''"), str(row.description).replace("'", "''"), str(row.displaySymbol).replace("'", "''"), str(row.symbol).replace("'", "''"), str(row.type).replace("'", "''"))
+
+    cursor.commit()
+    #Convert to Pandas Dataframe
+
+    # print(pd.DataFrame(r))
+
+
+
+    # Stock candles
+    # res = finnhub_client.stock_candles('AAPL', 'D', 1590988249, 1591852249)
+    # print(res)
+
+    cursor.close()
+except Exception as e:
+    cursor.close()
+    print("Error")
+    print(e)
