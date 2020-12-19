@@ -34,7 +34,7 @@ api_key = "sandbox_bv838gn48v6vtpa0emu0"
 server = 'George-PC'
 database = 'Algo_Trade'
 username = 'algorw'
-password = 'Toronto2020'
+password = 'password'
 cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server}; SERVER=' + server + ';DATABASE=' + database + ';UID=' + username + ';PWD=' + password)
 cursor = cnxn.cursor()
 try:
