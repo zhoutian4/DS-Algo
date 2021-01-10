@@ -35,3 +35,7 @@ def finnhub():
 def settings():
     config = read_from_config()
     return config["settings"]
+
+def email():
+    config = read_from_config()
+    return config["email"]

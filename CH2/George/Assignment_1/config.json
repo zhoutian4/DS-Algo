@@ -26,6 +26,11 @@
     "finnhub":{
         "api_key":"bv838gn48v6vtpa0emtg"
     },
+    "email":{
+        "sender":"george.tzhou22@gmail.com",
+        "sender_pwd":"Zt19930222!",
+        "receiver":"george.tzhou@outlook.com"
+    },
     "other":{
         "preprocessing_queue":[
             "preprocessing.scale_and_center",

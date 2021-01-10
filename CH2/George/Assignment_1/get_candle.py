@@ -11,6 +11,9 @@ import time
 # import the sqlalchemy module for DataFrame to_sql
 from sqlalchemy import create_engine
 import urllib
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 def convert_date_datetime(date = datetime.datetime.today()):
@@ -56,7 +59,15 @@ elif sqlserver_engine == "mssql":
 
     sqlalchemy_engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
 # cursor = cnxn.cursor()
-
+#The mail addresses and password
+sender_address = conf.email()["sender"]
+sender_pass = conf.email()["sender_pwd"]
+receiver_address = conf.email()["receiver"]
+#Setup the MIME
+message = MIMEMultipart()
+message['From'] = sender_address
+message['To'] = receiver_address
+message['Subject'] = 'Algo-Trading execution has an Error'   #The subject line
 
 
 # Get exchange setup
@@ -98,9 +109,20 @@ for index, row in tickers.iterrows():
         # print('"', datetime.datetime.today(), '" , "Error when getting data with ticker \'', ticker, '\': ', e, '"')
         try:
             error_sql = "insert into error_rec (error_time, error_info) values ('" + str(datetime.datetime.today()) + \
-                         "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e)
+                         "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e) + "')"
             with cnxn.cursor() as cursor:
                 cursor.execute(error_sql)
+            mail_content = '"' + datetime.datetime.today() + '" , "Error when getting data with ticker \'' + ticker + '\': ' + str(e) + '"'
+            # The body and the attachments for the mail
+            message.attach(MIMEText(mail_content, 'plain'))
+            # Create SMTP session for sending the mail
+            session = smtplib.SMTP('smtp.gmail.com', 587)  # use gmail with port
+            session.starttls()  # enable security
+            session.login(sender_address, sender_pass)  # login with mail_id and password
+            text = message.as_string()
+            session.sendmail(sender_address, receiver_address, text)
+            session.quit()
+
         except Exception as e2:
             print('"', datetime.datetime.today(), '" , "Error when adding error message to database: ' + str(e2) +'", "'
                   + 'Original Error when getting data with ticker \'', ticker, '\': ', e, '"')
