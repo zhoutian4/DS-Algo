@@ -98,7 +98,7 @@ for index, row in tickers.iterrows():
         # print('"', datetime.datetime.today(), '" , "Error when getting data with ticker \'', ticker, '\': ', e, '"')
         try:
             error_sql = "insert into error_rec (error_time, error_info) values ('" + str(datetime.datetime.today()) + \
-                         "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e)
+                         "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e) + "')"
             with cnxn.cursor() as cursor:
                 cursor.execute(error_sql)
         except Exception as e2:
