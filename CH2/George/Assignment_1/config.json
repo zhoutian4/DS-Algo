@@ -1,8 +1,9 @@
 {
     "settings":{
-        "db":"postgresql",
+        "db":"mssql",
         "compute":"EC2",
-        "exchange":"US"
+        "exchange":"US",
+        "candle_freq":"1"
     },
     "mysql":{
         "host":"localhost",
