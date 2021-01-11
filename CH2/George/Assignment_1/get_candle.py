@@ -104,7 +104,7 @@ try:
             if last_timestamp.iloc[0, 0]==None:
                 start_timestamp = 1577836800
             else:
-                start_timestamp = last_timestamp.iloc[0, 0]
+                start_timestamp = last_timestamp.iloc[0, 0] + 1
             # print(start_timestamp)
             stock_candles = pd.DataFrame(finnhub_client.stock_candles(ticker, candle_freq, start_timestamp,
                                                                       convert_date_datetime(datetime.datetime.today())))
