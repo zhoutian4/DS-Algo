@@ -83,7 +83,7 @@ try:
     # cursor = cnxn.cursor()
 
 
-    # error during execution flag
+    # set error during execution flag
     error_flag = 0
 
     # Get exchange setup
