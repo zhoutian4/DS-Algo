@@ -148,6 +148,7 @@ cython_debug/
 
 # Generated files
 .idea/**/contentModel.xml
+.idea/
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
@@ -207,3 +208,13 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+
+#.ds_store
+.DS_Store
+CH2/.DS_Store
+CH2/George/.DS_Store
+
+#config file
+CH2/George/Assignment_1/config.json
+
+
