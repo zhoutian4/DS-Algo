@@ -1,4 +1,8 @@
 {
+     "notice":{
+        "notice1":"Remember to change credentials in this config file",
+        "notice2":"change file name to config.json"
+    },
     "settings":{
         "db":"postgresql",
         "compute":"EC2",
@@ -12,24 +16,24 @@
         "db":"write-math"
     },
     "mssql":{
-        "host":"George-PC",
-        "user":"algorw",
-        "passwd":"password",
-        "db":"Algo_Trade"
+        "host":"localhost",
+        "user":"username",
+        "passwd":"my secret password",
+        "db":"my database"
     },
     "postgresql":{
-        "host":"algo-trade.cjnwlqlwl8gp.ca-central-1.rds.amazonaws.com",
-        "user":"algorw",
-        "passwd":"Toronto2020",
-        "db":"Algo_Trade"
+        "host":"localhost",
+        "user":"username",
+        "passwd":"my secret password",
+        "db":"my database"
     },
     "finnhub":{
-        "api_key":"bv838gn48v6vtpa0emtg"
+        "api_key":"finnhub api key"
     },
     "email":{
-        "sender":"george.tzhou22@gmail.com",
-        "sender_pwd":"Zt19930222!",
-        "receiver":"george.tzhou@outlook.com"
+        "sender":"sender email address",
+        "sender_pwd":"sender email password",
+        "receiver":"receiver email address"
     },
     "other":{
         "preprocessing_queue":[
