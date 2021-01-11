@@ -51,6 +51,7 @@ try:
     finnhub_client = finnhub.Client(api_key=api_key)
     candle_freq = conf.settings()["candle_freq"]
     # print(candle_freq)
+    # test
 
     sqlserver_engine = conf.settings()["db"]
     if sqlserver_engine == "postgresql":
