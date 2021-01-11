@@ -1,6 +1,6 @@
 {
     "settings":{
-        "db":"mssql",
+        "db":"postgresql",
         "compute":"EC2",
         "exchange":"US",
         "candle_freq":"1"

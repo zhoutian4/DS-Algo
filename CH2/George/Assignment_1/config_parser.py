@@ -1,13 +1,18 @@
 import json
+import os
+from pathlib import Path
 
 
-def read_from_config(file_name="config.json"):
+
+path = str(Path(os.getcwd()))
+
+def read_from_config(file_name=path + "/config.json"):
     with open(file_name) as json_data_file:
         data = json.load(json_data_file)
     return data
 
 # Write to config
-def write_to_config(data, file_name="config.json"):
+def write_to_config(data, file_name=path + "/config.json"):
     with open(file_name, "w") as outfile:
         json.dump(data, outfile)
 
@@ -39,3 +44,6 @@ def settings():
 def email():
     config = read_from_config()
     return config["email"]
+
+
+print(finnhub())
