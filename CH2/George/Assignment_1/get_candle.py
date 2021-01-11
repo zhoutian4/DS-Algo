@@ -91,7 +91,7 @@ try:
     # Get tickers
     tickers = pd.read_sql("select ticker from update_ticker_list "
                           "where create_date = (select max(create_date) from update_ticker_list)", cnxn)
-    tickers = pd.DataFrame(pd.Series(['AAPL']), columns=["ticker"])
+    # tickers = pd.DataFrame(pd.Series(['AAPL']), columns=["ticker"])
     # print(tickers)
     # Get Stock candles
     for index, row in tickers.iterrows():
