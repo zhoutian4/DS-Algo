@@ -46,4 +46,3 @@ def email():
     return config["email"]
 
 
-print(finnhub())
