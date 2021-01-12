@@ -14,6 +14,8 @@ import urllib
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from sqlalchemy import event
+
 
 def send_email(subject, mail_body):
     #The mail addresses and password
@@ -81,7 +83,16 @@ try:
         params = urllib.parse.quote_plus(conn_string)
 
         sqlalchemy_engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+
+
+        @event.listens_for(sqlalchemy_engine, "before_cursor_execute")
+        def receive_before_cursor_execute(
+                conn, cursor, statement, params, context, executemany
+        ):
+            if executemany:
+                cursor.fast_executemany = True
     # cursor = cnxn.cursor()
+
 
 
     # set error during execution flag
@@ -127,8 +138,8 @@ try:
             # print('"', datetime.datetime.today(), '" , "Error when getting data with ticker \'', ticker, '\': ', e, '"')
             try:
                 error_flag = 1
-                error_sql = "insert into error_rec (error_time, error_info) values ('" + str(datetime.datetime.today()) + \
-                             "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e) + "')"
+                error_sql = "insert into error_rec (error_time, error_info) values ('" + str(datetime.datetime.today()).replace("'","''") + \
+                             "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e).replace("'","''") + "')"
                 with cnxn.cursor() as cursor:
                     cursor.execute(error_sql)
                 send_email("Algo-Trading executed with error!",

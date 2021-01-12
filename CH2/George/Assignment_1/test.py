@@ -1,28 +1,19 @@
-# Python code to illustrate Sending mail from  
-# your Gmail account  
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import config_parser as conf
-# mail_content = '''Hello,
-# This is a simple mail. There is only text, no attachments are there The mail is sent using Python SMTP library.
-# Thank You
-# '''
-#The mail addresses and password
-sender_address = conf.email()["sender"]
-sender_pass = conf.email()["sender_pwd"]
-receiver_address = conf.email()["receiver"]
-#Setup the MIME
-message = MIMEMultipart()
-message['From'] = sender_address
-message['To'] = receiver_address
-message['Subject'] = 'Algo-Trading execution has an Error'   #The subject line
-#The body and the attachments for the mail
-message.attach(MIMEText(mail_content, 'plain'))
-#Create SMTP session for sending the mail
-session = smtplib.SMTP('smtp.gmail.com', 587) #use gmail with port
-session.starttls() #enable security
-session.login(sender_address, sender_pass) #login with mail_id and password
-text = message.as_string()
-session.sendmail(sender_address, receiver_address, text)
-session.quit()
+# Download the helper library from https://www.twilio.com/docs/python/install
+import os
+from twilio.rest import Client
+
+
+# Your Account Sid and Auth Token from twilio.com/console
+# and set the environment variables. See http://twil.io/secure
+account_sid = os.environ['ACc4be4cddc7842bb42a121b271e83ed11']
+auth_token = os.environ['d3b747ba000aff1c68e756e1fac26ad8']
+client = Client(account_sid, auth_token)
+
+message = client.messages \
+    .create(
+         body='test',
+         from_='+13344639051',
+         to='6472857154'
+     )
+
+print(message.sid)
