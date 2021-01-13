@@ -66,6 +66,8 @@ try:
     error_num = 0
 
     ticker = ""
+    ticker_no_data = ""
+    ticker_success = 0
 
     start_time = str(datetime.datetime.today())
     # setup api_key
@@ -104,15 +106,10 @@ try:
         # create sqlalchemy engine
         params = urllib.parse.quote_plus(conn_string)
 
-        sqlalchemy_engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params)
+        sqlalchemy_engine = create_engine("mssql+pyodbc:///?odbc_connect=%s" % params, fast_executemany=True)
 
 
-        @event.listens_for(sqlalchemy_engine, "before_cursor_execute")
-        def receive_before_cursor_execute(
-                conn, cursor, statement, params, context, executemany
-        ):
-            if executemany:
-                cursor.fast_executemany = True
+
     # cursor = cnxn.cursor()
 
 
@@ -124,7 +121,7 @@ try:
     # Get tickers
     tickers = pd.read_sql("select ticker from update_ticker_list "
                           "where create_date = (select max(create_date) from update_ticker_list)", cnxn)
-    # tickers = pd.DataFrame(pd.Series(['AAPL']), columns=["ticker"])
+    # tickers = pd.DataFrame(pd.Series(['AAPL','AAAPL', 'bbb']), columns=["ticker"])
     # print(tickers)
     # Get Stock candles
     for index, row in tickers.iterrows():
@@ -135,20 +132,25 @@ try:
             last_timestamp = pd.read_sql("select max(data_timestamp) from Candles where ticker = '" + str(ticker)+ "'", cnxn)
 
             if last_timestamp.iloc[0, 0]==None:
-                start_timestamp = 1577836800
+                # start_timestamp = 1577836800 # 2020.01.01
+                start_timestamp = 846806400 # 1996.01.01
             else:
                 start_timestamp = last_timestamp.iloc[0, 0] + 1
             # print(start_timestamp)
-            stock_candles = pd.DataFrame(finnhub_client.stock_candles(ticker, candle_freq, start_timestamp,
-                                                                      convert_date_datetime(datetime.datetime.today())))
+            finnhub_candles = finnhub_client.stock_candles(ticker, candle_freq, start_timestamp,
+                                                                      convert_date_datetime(datetime.datetime.today()))
+            if finnhub_candles["s"] == "ok":
+                stock_candles = pd.DataFrame(finnhub_candles)
 
-            stock_candles["ticker"] = str(ticker)
-            stock_candles["exchange"] = str(exchange)
-            stock_candles = stock_candles.reindex(columns=['ticker', 'exchange',"h", "l", "o", "c", "v", "s", "t"])
-            stock_candles.rename(columns={"h":"high_price", "c":"close_price",  "l":"low_price", "o":"open_price", "s":"status", "t":"data_timestamp", "v":"volume"}, inplace=True)
-            # print(stock_candles)
-            stock_candles.to_sql("candles", sqlalchemy_engine, if_exists="append", index=False)
-
+                stock_candles["ticker"] = str(ticker)
+                stock_candles["exchange"] = str(exchange)
+                stock_candles = stock_candles.reindex(columns=['ticker', 'exchange',"h", "l", "o", "c", "v", "s", "t"])
+                stock_candles.rename(columns={"h":"high_price", "c":"close_price",  "l":"low_price", "o":"open_price", "s":"status", "t":"data_timestamp", "v":"volume"}, inplace=True)
+                # print(stock_candles)
+                stock_candles.to_sql("candles", sqlalchemy_engine, if_exists="append", index=False, method="multi")
+                ticker_success = ticker_success + 1
+            else:
+                ticker_no_data = ticker_no_data + str(ticker) +","
             # stock_candles.to_sql("update_ticker_list", sqlalchemy_engine, if_exists="append", index=False)
             sleep(1)
 
@@ -172,14 +174,37 @@ try:
                 print('"', datetime.datetime.today(), '" , "Error when adding error message to database: ' + str(e2) +'", "'
                       + 'Original Error when getting data with ticker \'', ticker, '\': ', e, '"')
 
+    if len(ticker_no_data) != 0:
+        error_flag = 1
+        ticker_no_data = ticker_no_data[:-1]
+        error_num = error_num + ticker_no_data.count(",")
 
 finally:
+    sqlalchemy_engine.dispose()
     if error_flag == 0:
-       send_sms("Algo-Trading executed correctly, Started at: " + str(start_time) + " Finished at: "+ str(datetime.datetime.today()))
-       send_email("Algo-Trading executed correctly", "Started at: " + str(start_time) + " Finished at: "+ str(datetime.datetime.today())+" algo trading executed successfully")
+       send_sms("Algo-Trading executed correctly, Started at: " + str(start_time) + "\n Finished at: "
+                + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success))
+       send_email("Algo-Trading executed correctly", "Started at: " + str(start_time) + "\n Finished at: "
+                  + str(datetime.datetime.today())+ "\ntickers updated: "
+                  + str(ticker_success)+"\n Algo trading executed successfully")
     else:
-        send_email("Algo-Trading executed with " + str(error_num) + " error(s)!",
-                   'Last Error detail: "' + str(last_error_time) + '" , "Error when getting data with ticker \'' + str(
-                       ticker) + '\': ' + str(e) + '"')
-        send_sms("Algo-Trading execution has " + str(error_num) + " error(s), last error @ " + str(last_error_time)
-                 + 'Error when getting data with ticker \'' + str(ticker) + '\': ' + str(e))
+        try: e
+        except NameError: e = None
+        if e is None:
+            send_email("Algo-Trading executed finished with " + str(error_num) + " error(s)!",
+                       "Algo-Trading executed finished with " + str(error_num) + " error(s)! \nStarted at: " + str(start_time) + "\n Finished at: "
+                    + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success)
+                    + "\n tickers list cannot update: " + str(ticker_no_data))
+
+            send_sms("Algo-Trading execution finished with " + str(error_num) + " error(s), \nStarted at: " + str(start_time) + "\n Finished at: "
+                    + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success))
+        else:
+            send_email("Algo-Trading executed finished with " + str(error_num) + " error(s)!",
+                       "Algo-Trading executed finished with " + str(error_num) + " error(s)! \nStarted at: " + str(start_time) + "\n Finished at: "
+                    + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success)
+                    + "\n tickers list cannot update: " + str(ticker_no_data)
+                     +  'Last Error detail: "' + str(last_error_time) + '" , "Error when getting data with ticker \'' + str(
+                           ticker) + '\': ' + str(e) + '"')
+            send_sms("Algo-Trading execution finished with " + str(error_num) + " error(s), \nStarted at: " + str(start_time) + "\n Finished at: "
+                    + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success) + "last error @ " + str(last_error_time)
+                      + 'Error when getting data with ticker \'' + str(ticker) + '\': ' + str(e))
