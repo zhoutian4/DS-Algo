@@ -45,4 +45,7 @@ def email():
     config = read_from_config()
     return config["email"]
 
+def sms():
+    config = read_from_config()
+    return config["sms"]
 

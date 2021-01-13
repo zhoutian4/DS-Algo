@@ -9,12 +9,28 @@ import numpy as np
 import datetime
 import time
 # import the sqlalchemy module for DataFrame to_sql
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 import urllib
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from sqlalchemy import event
+from twilio.rest import Client
+
+def send_sms(sms_body):
+    # Your Account Sid and Auth Token from twilio.com/console
+    # and set the environment variables. See http://twil.io/secure
+    account_sid = conf.sms()["SID"]
+    auth_token = conf.sms()["auth_token"]
+    from_number = conf.sms()["from_phone"]
+    to_number = conf.sms()["to_phone"]
+    client = Client(account_sid, auth_token)
+
+    message = client.messages \
+        .create(
+        body=sms_body,
+        from_=from_number,
+        to=to_number
+    )
 
 
 def send_email(subject, mail_body):
@@ -45,6 +61,12 @@ def convert_date_datetime(date = datetime.datetime.today()):
 
 # Start Program
 try:
+    # set error during execution flag
+    error_flag = 0
+    error_num = 0
+
+    ticker = ""
+
     start_time = str(datetime.datetime.today())
     # setup api_key
     api_key = conf.finnhub()["api_key"]
@@ -95,8 +117,7 @@ try:
 
 
 
-    # set error during execution flag
-    error_flag = 0
+
 
     # Get exchange setup
     exchange = conf.settings()["exchange"]
@@ -138,12 +159,13 @@ try:
             # print('"', datetime.datetime.today(), '" , "Error when getting data with ticker \'', ticker, '\': ', e, '"')
             try:
                 error_flag = 1
+                error_num = error_num + 1
+                last_error_time = str(datetime.datetime.today())
                 error_sql = "insert into error_rec (error_time, error_info) values ('" + str(datetime.datetime.today()).replace("'","''") + \
                              "', 'Error when getting data with ticker [" + str(ticker) + "]: " + str(e).replace("'","''") + "')"
                 with cnxn.cursor() as cursor:
                     cursor.execute(error_sql)
-                send_email("Algo-Trading executed with error!",
-                           'Error detail: "'+ str(datetime.datetime.today()) + '" , "Error when getting data with ticker \'' + str(ticker)+ '\': '+ str(e)+ '"')
+
 
             except Exception as e2:
                 error_flag = 1
@@ -153,4 +175,11 @@ try:
 
 finally:
     if error_flag == 0:
-       send_email("Algo-Trading executed correctly", "Started at: " + start_time + " Finished at: "+ str(datetime.datetime.today())+" algo trading executed successfully")
+       send_sms("Algo-Trading executed correctly, Started at: " + str(start_time) + " Finished at: "+ str(datetime.datetime.today()))
+       send_email("Algo-Trading executed correctly", "Started at: " + str(start_time) + " Finished at: "+ str(datetime.datetime.today())+" algo trading executed successfully")
+    else:
+        send_email("Algo-Trading executed with " + str(error_num) + " error(s)!",
+                   'Last Error detail: "' + str(last_error_time) + '" , "Error when getting data with ticker \'' + str(
+                       ticker) + '\': ' + str(e) + '"')
+        send_sms("Algo-Trading execution has " + str(error_num) + " error(s), last error @ " + str(last_error_time)
+                 + 'Error when getting data with ticker \'' + str(ticker) + '\': ' + str(e))
