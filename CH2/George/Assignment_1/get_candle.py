@@ -147,7 +147,10 @@ try:
                 stock_candles = stock_candles.reindex(columns=['ticker', 'exchange',"h", "l", "o", "c", "v", "s", "t"])
                 stock_candles.rename(columns={"h":"high_price", "c":"close_price",  "l":"low_price", "o":"open_price", "s":"status", "t":"data_timestamp", "v":"volume"}, inplace=True)
                 # print(stock_candles)
-                stock_candles.to_sql("candles", sqlalchemy_engine, if_exists="append", index=False, method="multi")
+                if sqlserver_engine == "mssql":
+                    stock_candles.to_sql("candles", sqlalchemy_engine, if_exists="append", index=False)
+                elif sqlserver_engine == "postgresql":
+                    stock_candles.to_sql("candles", sqlalchemy_engine, if_exists="append", index=False, method="multi")
                 ticker_success = ticker_success + 1
             else:
                 ticker_no_data = ticker_no_data + str(ticker) +","
@@ -181,6 +184,7 @@ try:
 
 finally:
     sqlalchemy_engine.dispose()
+    cnxn.close()
     if error_flag == 0:
        send_sms("Algo-Trading executed correctly, Started at: " + str(start_time) + "\n Finished at: "
                 + str(datetime.datetime.today()) + "\ntickers updated: " + str(ticker_success))
